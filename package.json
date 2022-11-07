@@ -1,0 +1,27 @@
+{
+  "name": "glowcord",
+  "version": "0.0.0",
+  "description": "A low-level Discord API wrapper, with Gateway support, built by the community of Glowstikk_#5127",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheUntraceable/GlowCord.git"
+  },
+  "keywords": [
+    "API",
+    "Discord",
+    "Gateway",
+    "DiscordAPI",
+    "DiscordAPI"
+  ],
+  "author": "discord.gg/glowstik",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheUntraceable/GlowCord/issues"
+  },
+  "homepage": "https://github.com/TheUntraceable/GlowCord#readme"
+}
