@@ -3,4 +3,4 @@ GlowCord is a low-level [Discord](https://discord.com) [API](https://discord.dev
 
 ## __**Note**__
 This is highly unstable, use at your own risk.
-You need [Node](https://nodejs.org/en/) 17.0.0 or higher to use this as we don't install [node-fetch](https://npmjs.com/package/node-fetch) as it's a dependency of Node 17.5.0 or higher.
+You need [Node](https://nodejs.org/en/) 17.5.0 or higher to use this as we don't install [node-fetch](https://npmjs.com/package/node-fetch) as it's a dependency of Node 17.5.0 or higher.
