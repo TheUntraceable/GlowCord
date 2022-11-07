@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/TheUntraceable/GlowCord#readme",
   "dependencies": {
-    "websocket": "^1.0.34"
+    "@types/node": "^18.11.9",
+    "ws": "^8.11.0"
   }
 }
