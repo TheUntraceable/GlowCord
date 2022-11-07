@@ -1,4 +1,5 @@
 import fs from "fs";
+import { EventEmitter } from "events";
 
 export class Bucket {
     channelId: string
@@ -20,13 +21,14 @@ export class Bucket {
 
 }
 
-export class HTTPClient {
+export class HTTPClient extends EventEmitter {
 
     buckets: Map<string, Bucket> = new Map();
     private version: string
     globalPromise: Promise<boolean> = Promise.resolve(true);
 
     constructor(private token: string) {
+        super()
         this.token = token;
         this.version = JSON.parse(fs.readFileSync("../../package.json", "utf-8")).version
     }
@@ -41,6 +43,10 @@ export class HTTPClient {
             endpoint = endpoint.slice(1);
         }
 
+        if(endpoint.endsWith("/")) {
+            endpoint = endpoint.slice(0, -1);
+        }
+
         if(guildId || channelId && !bucket) {
             // If we have a top level resource but not cached it
             const newBucket = new Bucket({channelId, guildId});
@@ -48,9 +54,12 @@ export class HTTPClient {
             return await this.request({method, endpoint, data, channelId, guildId});
         }
 
-        await bucket.wait()
-        await this.globalPromise;
+        if(bucket) {
+            await bucket.wait()   
+        }
 
+        await this.globalPromise;
+        this.emit("debug", `[HTTP] ${method} https://discord.com/api/v10/${endpoint} ${data ? JSON.stringify(data) : ""}`)
         const response = await fetch(`https://discord.com/api/v10/${endpoint}`, {
             method,
             body: data,
@@ -60,14 +69,15 @@ export class HTTPClient {
             }
         })
 
-        let body: any;
-        try {
-            body = await response.json();
-        } catch(e) {
-            body = await response.text()
-        }
-
         if(response.status === 429) {
+            let body: any;
+
+            try {
+                body = await response.json();
+            } catch(e) {
+                body = await response.text()
+            }
+
             let retryAfter: number;
 
             if(response.headers.get("Retry-After")) retryAfter = parseFloat(response.headers.get("Retry-After"))
@@ -76,15 +86,19 @@ export class HTTPClient {
             if(body.retry_after && response.headers.get("Retry-After")) {
                 retryAfter = parseFloat(body.retry_after) > parseFloat(response.headers.get("Retry-After")) ? parseFloat(body.retry_after) : parseFloat(response.headers.get("Retry-After"))
             }
+
             const promise = new Promise<boolean>((resolve) => {
                 setTimeout(() => {
                     resolve(true);
                 }, retryAfter)
             })
+
             bucket.setPromise(promise);
+
             if(body.global) {
                 this.globalPromise = promise;
             }
+
             return await this.request({method, endpoint, data, channelId, guildId, attempt: attempt ? attempt + 1 : 1});
         }
 

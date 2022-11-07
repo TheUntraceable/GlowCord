@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import { HTTPClient } from "./http";
+import { HTTPClient } from "./http.js";
 import WebSocket from "ws" // type: ignore
 
 export enum OpCode {
@@ -36,20 +36,29 @@ export enum GatewayCloseCodes {
 class GatewayClient extends EventEmitter {
     private http: HTTPClient = new HTTPClient(this.token);
     private websocket: WebSocket;
+
     constructor(private token: string) {
         super()
         this.token = token;
+        this.http = new HTTPClient(token);
+        this.http.on("debug", console.log)
     }
 
     async connect() {
-        const gatewayResponse = await this.http.get("/gateway/bot");
-        const gateway = (await gatewayResponse.json()).url;
-        this.websocket = new WebSocket(`wss://${gateway}?v=10&encoding=json`);
+        const gatewayResponse = await this.http.get("/gateway/");
+        const gatewayBody = await gatewayResponse.json();
+        const gateway = gatewayBody.url;
+        console.log(gatewayBody)
+
+        this.websocket = new WebSocket(`${gateway}?v=10&encoding=json`);
+
         this.websocket.on("open", () => {
             this.emit("debug", `[GATEWAY] Connected to wss://${gateway}?v=10&encoding=json`);
         })
+
         this.websocket.on("message", async data => {
-            console.log(data)
+            const payload = JSON.parse(data.toString());
+            this.emit("debug", `[GATEWAY] Received ${JSON.stringify(payload)}`);
         })
     }
 }
