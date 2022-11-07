@@ -1,3 +1,4 @@
+import EventEmitter from "events";
 import { HTTPClient } from "./http";
 import WebSocket from "ws" // type: ignore
 
@@ -32,18 +33,23 @@ export enum GatewayCloseCodes {
     DISALLOWED_INTENTS = 4014
 }
 
-class GatewayClient {
+class GatewayClient extends EventEmitter {
     private http: HTTPClient = new HTTPClient(this.token);
-
+    private websocket: WebSocket;
     constructor(private token: string) {
+        super()
         this.token = token;
     }
 
     async connect() {
-        const gatewayResponse = await this.http.get("/gateway/bot")
+        const gatewayResponse = await this.http.get("/gateway/bot");
         const gateway = (await gatewayResponse.json()).url;
-        new WebSocket(`wss://${gateway}?v=10&encoding=json`, {
-            
+        this.websocket = new WebSocket(`wss://${gateway}?v=10&encoding=json`);
+        this.websocket.on("open", () => {
+            this.emit("debug", `[GATEWAY] Connected to wss://${gateway}?v=10&encoding=json`);
+        })
+        this.websocket.on("message", async data => {
+            console.log(data)
         })
     }
 }
