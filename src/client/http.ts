@@ -5,7 +5,7 @@ export class Bucket {
     guildId: string
     promise: Promise<boolean> = Promise.resolve(true);
     // Maybe implement the other top-level resources
-    constructor(channelId: string, guildId: string) {
+    constructor({channelId = null,  guildId = null}: {channelId?: string, guildId?: string} = {}) {
         this.channelId = channelId;
         this.guildId = guildId;
     }
@@ -43,7 +43,7 @@ export class HTTPClient {
 
         if(guildId || channelId && !bucket) {
             // If we have a top level resource but not cached it
-            const newBucket = new Bucket(channelId, guildId);
+            const newBucket = new Bucket({channelId, guildId});
             this.buckets.set(bucketString, newBucket);
             return await this.request({method, endpoint, data, channelId, guildId});
         }
@@ -95,7 +95,29 @@ export class HTTPClient {
                 }, parseFloat(response.headers.get("x-RateLimit-Reset-After")))
             })
             bucket.setPromise(promise);
-            
         }
+
+        if(!this.buckets.get(bucketString) && response.headers.get("x-RateLimit-Bucket")) {
+            this.buckets.set(response.headers.get("X-RateLimit-Bucket"), new Bucket())
+        }
+        
+        return response
     }
+
+    async get(endpoint: string, data?: any, channelId?: string, guildId?: string) {
+        return await this.request({method: "GET", endpoint, data, channelId, guildId});
+    }
+
+    async post(endpoint: string, data?: any, channelId?: string, guildId?: string) {
+        return await this.request({method: "POST", endpoint, data, channelId, guildId});
+    }
+
+    async patch(endpoint: string, data?: any, channelId?: string, guildId?: string) {
+        return await this.request({method: "PATCH", endpoint, data, channelId, guildId});
+    }
+
+    async delete(endpoint: string, data?: any, channelId?: string, guildId?: string) {
+        return await this.request({method: "DELETE", endpoint, data, channelId, guildId});
+    }
+
 }

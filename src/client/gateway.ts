@@ -1,3 +1,4 @@
+import { HTTPClient } from "./http";
 import WebSocket from "ws" // type: ignore
 
 export enum OpCode {
@@ -32,11 +33,17 @@ export enum GatewayCloseCodes {
 }
 
 class GatewayClient {
+    private http: HTTPClient = new HTTPClient(this.token);
+
     constructor(private token: string) {
         this.token = token;
     }
 
     async connect() {
-        
+        const gatewayResponse = await this.http.get("/gateway/bot")
+        const gateway = (await gatewayResponse.json()).url;
+        new WebSocket(`wss://${gateway}?v=10&encoding=json`, {
+            
+        })
     }
 }
